@@ -1,21 +1,21 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-## Firstly install PyMongo using pip install PyMongo and pip install Flask-PyMongo
 from flask_pymongo import PyMongo
-from bson import ObjectId  
 from werkzeug.security import generate_password_hash
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "http://localhost:51798"}})
 app.config["MONGO_URI"] = "mongodb://localhost:27017/BlogApp"
 mongo = PyMongo(app)
 
 @app.route('/signup', methods=['POST'])
 def signup():
     try:
-        userName = request.form.get('name')
-        userEmail = request.form.get('email')
-        userPassword = request.form.get('password')
+        data = request.get_json()
+
+        userName = data.get('name')
+        userEmail = data.get('email')
+        userPassword = data.get('password')
 
         if userName and userEmail and userPassword and request.method == 'POST':
             existing_user = mongo.db.AllUsers.find_one({'email': userEmail})
@@ -23,7 +23,9 @@ def signup():
                 return jsonify({'error': 'Email already exists'}), 400
 
             hashed_password = generate_password_hash(userPassword)
-            mongo.db.AllUsers.insert({'name': userName, 'email': userEmail, 'password': hashed_password})
+
+            # Use attribute notation to access the collection
+            mongo.db.AllUsers.insert_one({'name': userName, 'email': userEmail, 'password': hashed_password})
 
             resp = {'message': 'User added successfully'}
             return jsonify(resp), 200
