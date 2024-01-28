@@ -28,8 +28,7 @@ def signup():
             if existing_user:
                 return jsonify({'error': 'Email already exists'}), 400
 
-            hashed_password = generate_password_hash(userPassword)
-            mongo.db.AllUsers.insert_one({'name': userName, 'email': userEmail, 'password': hashed_password})
+            mongo.db.AllUsers.insert_one({'name': userName, 'email': userEmail, 'password': userPassword})
 
             resp = {'message': 'User added successfully'}
             return jsonify(resp), 200
@@ -51,35 +50,34 @@ def login():
         userPassword = data.get('password')
 
         if userEmail and userPassword and request.method == 'POST':
-            existing_user = mongo.db.AllUsers.find_one({'email': userEmail})
-            hashed_password = generate_password_hash(userPassword)
+            existing_user = mongo.db.AllUsers.find_one({'email': userEmail, 'name': userName, 'password': userPassword})
 
-            if existing_user and    check_password_hash(existing_user['password'], hashed_password):
-             
-              
-            #   get_token={
-            #      "email": userEmail,
-            #      "exp": datetime.utcnow() + timedelta(weeks=1)
+            if existing_user:
+                get_token = {
+                    "email": userEmail,
+                    # "exp": datetime.utcnow() + timedelta(weeks=1)
+                }
+                secret_key = secrets.token_hex(32)
+                app.config['SECRET_KEY'] = secret_key
+                gettoken = jwt.encode(get_token, app.config['SECRET_KEY'])
 
-            #   }
-                print("User logged in successfully")
-            #   secret_key = secrets.token_hex(32)
-            #   app.config['SECRET_KEY'] = secret_key
-            #   print(f"JWT Secret Key: {secret_key}")
-
-            #   token = jwt.encode(get_token, app.config['SECRET_KEY'])
-            #   gettoken = token
                 resp = {'message': 'User logged in successfully'}
-            return jsonify(resp), 200
+                print("User logged in successfully")
+                return jsonify(resp), 200
+            else:
+                resp = {'error': 'Issue occured while logging in'}
+                return jsonify(resp), 401
+
         else:
-            return jsonify({'error': 'Invalid request'}), 400
+            resp = {'error': 'Invalid email or password'}
+            return jsonify(resp), 200
     except Exception as e:
         print(e)
         return jsonify({'error': 'Internal Server Error'}), 500
-# @app.route('/getToken', methods=['GET'])
-# def getToken():
-#     global gettoken
-#     return   gettoken
+@app.route('/getToken', methods=['GET'])
+def getToken():
+    global gettoken
+    return   jsonify({'token': gettoken})
 
     
 
