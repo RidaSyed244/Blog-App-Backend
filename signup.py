@@ -14,6 +14,7 @@ app.config["MONGO_URI"] = "mongodb://localhost:27017/BlogApp"
 mongo = PyMongo(app)
 
 gettoken= ''
+AlltextBlogs=[]
 @app.route('/signup', methods=['POST'])
 def signup():
     try:
@@ -55,7 +56,7 @@ def login():
             if existing_user:
                 get_token = {
                     "email": userEmail,
-                    # "exp": datetime.utcnow() + timedelta(weeks=1)
+                    "exp": datetime.utcnow() + timedelta(weeks=1)
                 }
                 secret_key = secrets.token_hex(32)
                 app.config['SECRET_KEY'] = secret_key
@@ -78,6 +79,24 @@ def login():
 def getToken():
     global gettoken
     return   jsonify({'token': gettoken})
+
+@app.route('/textBlog', methods=['POST'])
+def textBlog():
+    try:
+        data = request.get_json()
+        textBlog = data.get('textBlog')
+        userToken = data.get('token')
+
+        if textBlog  and request.method == 'POST':
+            mongo.db.TextBlog.insert_one({'textBlog': textBlog, 'token': userToken})
+            resp = {'message': 'Text added successfully'}
+            return jsonify(resp), 200
+        else:
+            return jsonify({'error': 'Invalid request'}), 400
+    except Exception as e:
+        print(e)
+        return jsonify({'error': 'Internal Server Error'}), 500
+
 
     
 
