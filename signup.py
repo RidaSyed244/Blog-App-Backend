@@ -98,7 +98,17 @@ def textBlog():
         return jsonify({'error': 'Internal Server Error'}), 500
 
 
-    
+@app.route("/allTextBlogs", methods= ["GET"])
+def allTextBlogs():
+    global AlltextBlogs
+    try:
+        allBlogs= mongo.db.TextBlog.find()
+        for blog in allBlogs:
+            AlltextBlogs.append(blog)
+        return jsonify(AlltextBlogs), 200
+    except Exception as e:
+        print(e)
+        return jsonify({'error': 'Internal Server Error'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
