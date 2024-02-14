@@ -100,12 +100,10 @@ def textBlog():
 
 @app.route("/allTextBlogs", methods= ["GET"])
 def allTextBlogs():
-    global AlltextBlogs
     try:
-        allBlogs= mongo.db.TextBlog.find()
-        for blog in allBlogs:
-            AlltextBlogs.append(blog)
-        return jsonify(AlltextBlogs), 200
+        allBlogs = mongo.db.TextBlog.find({}, {"_id": 0, "textBlog": 1, "token": 1})
+        textBlogs_list = [{"textBlog": blog["textBlog"], "token": blog["token"]} for blog in allBlogs]
+        return jsonify(textBlogs_list), 200
     except Exception as e:
         print(e)
         return jsonify({'error': 'Internal Server Error'}), 500
