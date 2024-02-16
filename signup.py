@@ -107,6 +107,21 @@ def allTextBlogs():
     except Exception as e:
         print(e)
         return jsonify({'error': 'Internal Server Error'}), 500
+@app.route("/textBlog", methods= ["POST"])
+def textBlog():
+    try:
+        data = request.get_json()
+        textBlog = data.get('textBlog')
+        userToken = data.get('token')
 
+        if textBlog and userToken and request.method == 'POST':
+            mongo.db.TextBlog.insert_one({'textBlog': textBlog, 'token': userToken})
+            resp = {'message': 'Text added successfully'}
+            return jsonify(resp), 200
+        else:
+            return jsonify({'error': 'Invalid request'}), 400
+    except Exception as e:
+        print(e)
+        return jsonify({'error': 'Internal Server Error'}), 500
 if __name__ == '__main__':
     app.run(debug=True)
