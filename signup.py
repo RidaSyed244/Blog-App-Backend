@@ -14,6 +14,7 @@ app.config["MONGO_URI"] = "mongodb://localhost:27017/BlogApp"
 mongo = PyMongo(app)
 
 gettoken= ''
+objectId= ''
 AlltextBlogs=[]
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -42,7 +43,7 @@ def signup():
 @app.route('/login', methods=['POST'])
 def login():
     global gettoken
-
+    global objectId
     try:
         data = request.get_json()
 
@@ -61,7 +62,7 @@ def login():
                 secret_key = secrets.token_hex(32)
                 app.config['SECRET_KEY'] = secret_key
                 gettoken = jwt.encode(get_token, app.config['SECRET_KEY'])
-
+                objectId = existing_user['_id']
                 resp = {'message': 'User logged in successfully'}
                 print("User logged in successfully")
                 return jsonify(resp), 200
@@ -75,27 +76,33 @@ def login():
     except Exception as e:
         print(e)
         return jsonify({'error': 'Internal Server Error'}), 500
+@app.route('/getUserId', methods=['GET'])
+def getUserId():
+    global objectId
+    print(objectId)
+    return jsonify({'_id': str(objectId)})  # Convert ObjectId to string
 @app.route('/getToken', methods=['GET'])
 def getToken():
     global gettoken
     return   jsonify({'token': gettoken})
 
-@app.route('/textBlog', methods=['POST'])
-def textBlog():
-    try:
-        data = request.get_json()
-        textBlog = data.get('textBlog')
-        userToken = data.get('token')
 
-        if textBlog  and request.method == 'POST':
-            mongo.db.TextBlog.insert_one({'textBlog': textBlog, 'token': userToken})
-            resp = {'message': 'Text added successfully'}
-            return jsonify(resp), 200
-        else:
-            return jsonify({'error': 'Invalid request'}), 400
-    except Exception as e:
-        print(e)
-        return jsonify({'error': 'Internal Server Error'}), 500
+# @app.route('/textBlog', methods=['POST'])
+# def textBlog():
+#     try:
+#         data = request.get_json()
+#         textBlog = data.get('textBlog')
+#         userToken = data.get('token')
+
+#         if textBlog  and request.method == 'POST':
+#             mongo.db.TextBlog.insert_one({'textBlog': textBlog, 'token': userToken})
+#             resp = {'message': 'Text added successfully'}
+#             return jsonify(resp), 200
+#         else:
+#             return jsonify({'error': 'Invalid request'}), 400
+#     except Exception as e:
+#         print(e)
+#         return jsonify({'error': 'Internal Server Error'}), 500
 
 
 @app.route("/allTextBlogs", methods= ["GET"])
