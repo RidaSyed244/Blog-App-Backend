@@ -87,29 +87,11 @@ def getToken():
     return   jsonify({'token': gettoken})
 
 
-# @app.route('/textBlog', methods=['POST'])
-# def textBlog():
-#     try:
-#         data = request.get_json()
-#         textBlog = data.get('textBlog')
-#         userToken = data.get('token')
-
-#         if textBlog  and request.method == 'POST':
-#             mongo.db.TextBlog.insert_one({'textBlog': textBlog, 'token': userToken})
-#             resp = {'message': 'Text added successfully'}
-#             return jsonify(resp), 200
-#         else:
-#             return jsonify({'error': 'Invalid request'}), 400
-#     except Exception as e:
-#         print(e)
-#         return jsonify({'error': 'Internal Server Error'}), 500
-
-
 @app.route("/allTextBlogs", methods= ["GET"])
 def allTextBlogs():
     try:
-        allBlogs = mongo.db.TextBlog.find({}, {"_id": 0, "textBlog": 1, "token": 1})
-        textBlogs_list = [{"textBlog": blog["textBlog"], "token": blog["token"]} for blog in allBlogs]
+        allBlogs = mongo.db.TextBlog.find({}, {"_id": 0, "textBlog": 1, "userId": 1})
+        textBlogs_list = [{"textBlog": blog["textBlog"], "userId": blog["userId"]} for blog in allBlogs]
         return jsonify(textBlogs_list), 200
     except Exception as e:
         print(e)
@@ -119,10 +101,10 @@ def textBlog():
     try:
         data = request.get_json()
         textBlog = data.get('textBlog')
-        userToken = data.get('token')
+        userToken = data.get('userId')
 
         if textBlog and userToken and request.method == 'POST':
-            mongo.db.TextBlog.insert_one({'textBlog': textBlog, 'token': userToken})
+            mongo.db.TextBlog.insert_one({'textBlog': textBlog, 'userId': userToken})
             resp = {'message': 'Text added successfully'}
             return jsonify(resp), 200
         else:
@@ -131,4 +113,4 @@ def textBlog():
         print(e)
         return jsonify({'error': 'Internal Server Error'}), 500
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='192.168.1.107', port=5000)
