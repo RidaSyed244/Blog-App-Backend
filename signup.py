@@ -7,6 +7,8 @@ from flask_bcrypt import check_password_hash, generate_password_hash
 import jwt
 from datetime import datetime, timedelta
 import secrets
+from bson import ObjectId
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -87,11 +89,11 @@ def getToken():
     return   jsonify({'token': gettoken})
 
 
-@app.route("/allTextBlogs", methods= ["GET"])
+@app.route("/allTextBlogs", methods=["GET"])
 def allTextBlogs():
     try:
-        allBlogs = mongo.db.TextBlog.find({}, {"_id": 0, "textBlog": 1, "userId": 1})
-        textBlogs_list = [{"textBlog": blog["textBlog"], "userId": blog["userId"]} for blog in allBlogs]
+        allBlogs = mongo.db.TextBlog.find({}, {"_id": 1, "textBlog": 1, "userId": 1})
+        textBlogs_list = [{"textBlog": blog["textBlog"], "userId": blog["userId"], "blogId": str(blog["_id"])} for blog in allBlogs]
         return jsonify(textBlogs_list), 200
     except Exception as e:
         print(e)
@@ -112,5 +114,24 @@ def textBlog():
     except Exception as e:
         print(e)
         return jsonify({'error': 'Internal Server Error'}), 500
+@app.route("/likeTextBlog", methods=["POST"])
+def likeTextBlog():
+    try:
+        data = request.get_json()
+        blogId = data.get('blogId')
+        userId = data.get('userId')
+        if blogId and userId and request.method == 'POST':
+            existing_blog = mongo.db.TextBlog.find_one({'_id': ObjectId(blogId)})
+            if existing_blog:
+                # Update the existing document to add the subcollection
+                mongo.db.TextBlog.update_one({'_id': ObjectId(blogId)}, {'$push': {'AllLikes': userId}})
+                return jsonify({'message': 'Blog liked successfully'}), 200
+            else:
+                return jsonify({'error': 'Blog not found'}), 404
+        else:
+            return jsonify({'error': 'Invalid request data'}), 400
+    except Exception as e:
+        print(e)
+        return jsonify({'error': 'Internal Server Error'}), 500
 if __name__ == '__main__':
-    app.run(debug=True, host='192.168.1.107', port=5000)
+    app.run(debug=True, port=5000)
