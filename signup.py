@@ -124,12 +124,24 @@ def likeTextBlog():
             existing_blog = mongo.db.TextBlog.find_one({'_id': ObjectId(blogId)})
             if existing_blog:
                 # Update the existing document to add the subcollection
-                mongo.db.TextBlog.update_one({'_id': ObjectId(blogId)}, {'$push': {'AllLikes': userId}})
+                mongo.db.TextBlogLikes.insert_one({'blogId': blogId, 'userId': userId})
                 return jsonify({'message': 'Blog liked successfully'}), 200
             else:
                 return jsonify({'error': 'Blog not found'}), 404
         else:
             return jsonify({'error': 'Invalid request data'}), 400
+    except Exception as e:
+        print(e)
+        return jsonify({'error': 'Internal Server Error'}), 500
+@app.route("/FetchLikes", methods=["GET"])
+def FetchLikes():
+    try:
+        # Fetch all documents from "TextBlogLikes" collection
+        likes = list(mongo.db.TextBlogLikes.find({}, {"_id": 0}))
+
+        # Return the fetched data
+        return jsonify(likes), 200
+        
     except Exception as e:
         print(e)
         return jsonify({'error': 'Internal Server Error'}), 500
